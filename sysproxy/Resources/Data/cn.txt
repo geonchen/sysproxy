@@ -1,0 +1,58 @@
+﻿# translation for Simplified Chinese
+
+# Menu items
+
+ProxyMode=代理模式
+Disable=禁用
+PAC=PAC模式
+Global=全局模式
+PACFile=PAC文件
+Update PAC from GFWList=下载GFWList并更新PAC
+Edit user rule=编辑用户规则
+Setting=设置
+About=关于
+Quit=退出
+
+
+#Setting Form
+
+Setting=设置
+LocalPort=本地端口
+RemotePort=远程端口
+RemoteClient=远程客户端
+OpenFile=浏览
+RemoteClientArgs=远程客户端参数
+HideClient=隐藏客户端
+AutoStart=开机启动
+Save=保存
+Reset=重置
+
+
+# Messages
+Save setting file fail=保存设置文件失败
+
+Illegal port number format=非法端口格式
+
+Load PAC file fail=读取PAC文件失败
+
+Update PAC file success=更新PAC文件成功
+
+Update PAC file fail=更新PAC文件失败
+
+No free port found=没有可用的端口
+
+Downloading GFWList file,please wait a moment=正在下载GFWList文件，请稍后
+
+GFWList is latest,no need to update=GFWList已最新，无需更新
+
+Download GFWList file success=下载GFWList文件成功
+
+Download GFWList file fail, please check network or try change proxy mode=下载GFWList文件失败，请检查网络或尝试更改代理模式
+
+Unsupported operating system,use Windows Vista at least=不支持的操作系统版本，最低需求为Windows Vista
+
+Unsupported .NET Framework,require 3.5 version=不支持的.NET框架，需求为3.5版本
+
+Find sysproxy icon in your notify tray,which is usually on bottom right corner=请在右下角任务栏寻找sysproxy图标
+
+
