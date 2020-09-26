@@ -207,7 +207,8 @@ namespace sysproxy.Services
         {
             try
             {
-                string gfwlist = File.ReadAllText(Path.Combine(directory, gfwlist_file), Encoding.UTF8);
+                string path = Path.Combine(directory, gfwlist_file);
+                string gfwlist = File.ReadAllText(path, Encoding.UTF8);
                 BalloonTip tip;
                 if (gfwlist == e.Result)
                 {
@@ -220,7 +221,7 @@ namespace sysproxy.Services
                     ShowBalloonTip?.Invoke(this, tip);
                     return;
                 }
-                File.WriteAllText(FileUtil.GetPath(gfwlist_url), e.Result, Encoding.UTF8);
+                File.WriteAllText(path, e.Result, Encoding.UTF8);
                 tip = new BalloonTip()
                 {
                     IconIndex = 1,
