@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Threading;
 using System.Reflection;
 using System.Diagnostics;
 using System.Windows.Forms;
@@ -24,19 +23,17 @@ namespace sysproxy.Presenters
     #endregion
     public class MenuPresenter : Presenter<IMenuView>
     {
-
+        private const string gfwlist_url = "https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt";
         private PACServer pacServer;
         private RemoteClient remoteClient;
         private static Job job;
 
         public MenuPresenter(IMenuView view) : base(view)
         {
-            View.UpdateGFWList_Click += UpdateGFWList;
+            View.UpdateGFWList_Click += View_UpdateGFWList;
             View.EditUserRule_Click += View_EditUserRule;
             View.LoadSettingForm += View_LoadSettingForm;
         }
-
-       
 
         protected override void View_LoadData(object sender, EventArgs e)
         {
@@ -50,7 +47,7 @@ namespace sysproxy.Presenters
             {
                 pacServer = new PACServer(Setting.Instance);
                 pacServer.ShowBalloonTip += Menu_ShowBalloonTip;
-                pacServer.UserRuleChanged += PACServer_UserRuleChanged;
+                pacServer.FileChanged += PACServer_FileChanged;
             }
             if(remoteClient == null)
             {
@@ -111,12 +108,6 @@ namespace sysproxy.Presenters
         }
 
         /// <summary>
-        /// Can't read the correct setting file when operating system reboot.
-        /// It need to read setting file again when operating system wake up.
-        /// </summary>
-     
-
-        /// <summary>
         /// Invoke this event when setting file save finish.
         /// </summary>
         private void Setting_Saved(object sender, EventArgs e)
@@ -132,16 +123,11 @@ namespace sysproxy.Presenters
             Start();
         }
 
-        private void UpdateGFWList(object sender, EventArgs e)
+        private void View_UpdateGFWList(object sender, EventArgs e)
         {
-            if (pacServer != null)
-            {
-                Thread thread = new Thread(new ThreadStart(() =>
-                {
-                    pacServer.UpdateGFWList(Setting.Instance.Mode==ProxyMode.Disable);
-                }));
-                thread.Start();
-            }
+            string path = pacServer.GetGFWListFilePath();
+            Process.Start("notepad.exe", path);
+            Process.Start(gfwlist_url);
         }
 
         private void View_EditUserRule(object sender, EventArgs e)
@@ -150,7 +136,7 @@ namespace sysproxy.Presenters
             Process.Start("notepad.exe", path);
         }
 
-        private void PACServer_UserRuleChanged(object sender, EventArgs e)
+        private void PACServer_FileChanged(object sender, EventArgs e)
         {
             if (Setting.Instance.Mode != ProxyMode.PAC)
                 return;
@@ -188,10 +174,6 @@ namespace sysproxy.Presenters
             }
             return viewType;
         }
-
-   
-
-
         public void Stop()
         {
             pacServer?.Stop();

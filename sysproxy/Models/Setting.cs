@@ -42,7 +42,7 @@ namespace sysproxy.Models
                 if (setting.LocalPort == 0)
                     setting.LocalPort = 8848;
                 if (setting.RemotePort == 0)
-                    setting.RemotePort = 1080;
+                    setting.RemotePort = 8080;
             }
             catch (Exception e)
             {
@@ -52,7 +52,7 @@ namespace sysproxy.Models
                     {
                         Mode = ProxyMode.Disable,
                         LocalPort = 8848,
-                        RemotePort = 1080
+                        RemotePort = 8080
                     };
                 }
             }

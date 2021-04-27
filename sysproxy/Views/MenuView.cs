@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Windows.Forms;
 using sysproxy.Properties;
 using sysproxy.Utils;
@@ -96,7 +95,7 @@ namespace sysproxy.Views
                 }),
                 CreateMenuGroup("PACFile",new MenuItem[]
                 {
-                    CreateMenuItem ("Update PAC from GFWList",new EventHandler(UpdateGFWListItem_Click)),
+                    CreateMenuItem ("Update PAC from gfwlist",new EventHandler(UpdateGFWListItem_Click)),
                     CreateMenuItem ("Edit user rule",new EventHandler(EditUserRuleItem_Click))
                 }),
                 CreateMenuItem ("Setting",new EventHandler(SettingItem_Click)),
@@ -157,7 +156,7 @@ namespace sysproxy.Views
 
         private void AboutItem_Click(object sender, EventArgs e)
         {
-            Process.Start("https://github.com/geonchen/sysproxy");
+            Process.Start("https://github.com/keyonchen/sysproxy");
         }
         private void QuitItem_Click(object sender, EventArgs e)
         {

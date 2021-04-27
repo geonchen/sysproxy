@@ -204,10 +204,8 @@
     <None Include="Resources\Data\user-rule.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Data\gfwlist.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="Properties\sysproxy.ico" />
+    <Content Include="Resources\Data\gfwlist.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

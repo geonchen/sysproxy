@@ -35,6 +35,11 @@ namespace sysproxy.Services
         {
             if (string.IsNullOrEmpty(fullPath))
                 return;
+            if (!File.Exists(fullPath))
+            {
+                MsgBox.Error("RemoteClient path does not exist");
+                return;
+            }
             if (process == null)
             {
                 string fileName = Path.GetFileName(fullPath);

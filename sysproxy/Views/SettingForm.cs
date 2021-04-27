@@ -107,7 +107,7 @@ namespace sysproxy.Views
         private void Reset_Button_Click(object sender, EventArgs e)
         {
             LocalPort_TB.Text = "8848";
-            RemotePort_TB.Text = "1080";
+            RemotePort_TB.Text = "8080";
             RemoteClientPath = null;
             RemoteClientArgs_TB.Text = null;
             AutoStart_Item.Checked = false;

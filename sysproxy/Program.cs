@@ -35,8 +35,6 @@ namespace sysproxy
                 }
                 return;
             }
-            //Check explore.exe is running,so we can read correct setting file
-
 
             //Check running sysproxy
             using (Mutex mutex = new Mutex(false, "Global\\sysproxy" + Application.StartupPath.GetHashCode()))

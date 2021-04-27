@@ -9,42 +9,40 @@ using sysproxy.Models;
 using sysproxy.Presenters;
 using System.Globalization;
 using System.Collections;
+using System.Threading;
 
 namespace sysproxy.Services
 {
     public class PACServer:IService
     {
-        private const string gfwlist_url = "https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt";
         private const string folder = "Rule";
         private const string gfwlist_file = "gfwlist.txt";
         private const string user_rule_file = "user-rule.txt";
         private const string abp_js_file = "abp.js";
         private const string pac_file = "pac.txt";
         private string directory = string.Empty;
-
-        static Random random = new Random();
         private int localPort;
         private int remotePort;
         private int pacPort;
         public string pac_url;
-
         private HttpListener listener;
         private string script;
 
         public event EventHandler ShowBalloonTip;
-        FileSystemWatcher UserRuleFileWatcher;
-        public event EventHandler UserRuleChanged;
+
+        public event EventHandler FileChanged;
 
         public PACServer(Setting setting)
         {
             localPort = setting.LocalPort;
             remotePort = setting.RemotePort;
             pacPort = SocketUtil.GetFreePort(localPort);
-            pac_url = $"http://127.0.0.1:{pacPort}/pac.js?t={random.Next()}";
+            pac_url = $"http://127.0.0.1:{pacPort}/pac.js";
             directory = FileUtil.GetPath(folder);
             Directory.CreateDirectory(directory);
             UpdatePACFile();
-            WatchUserRulerFile();
+            WatchFile(gfwlist_file);
+            WatchFile(user_rule_file);
         }
 
 
@@ -106,7 +104,6 @@ namespace sysproxy.Services
             localPort = setting.LocalPort;
             remotePort = setting.RemotePort;
             UpdatePACFile();
-            
         }
 
         private void UpdatePACFile()
@@ -123,14 +120,21 @@ namespace sysproxy.Services
                 File.WriteAllText(Path.Combine(directory, gfwlist_file), gfwlist, Encoding.UTF8);
             }
             string userRule;
-            try
-            {
-                userRule = File.ReadAllText(Path.Combine(directory, user_rule_file), Encoding.UTF8);
-            }
-            catch
-            {
+            string userPath = Path.Combine(directory, user_rule_file);
+            if (!File.Exists(userPath)){
                 userRule = Resources.user_rule;
                 File.WriteAllText(Path.Combine(directory, user_rule_file), userRule, Encoding.UTF8);
+            }
+            else
+            {
+                //以只读共享方式打开文件
+                using (FileStream fs = new FileStream(userPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    int length = (int)fs.Length;
+                    byte[] content = new byte[length];
+                    fs.Read(content, 0, content.Length);
+                    userRule = Encoding.UTF8.GetString(content);
+                }
             }
             string abpContent;
             try
@@ -184,65 +188,13 @@ namespace sysproxy.Services
                 ShowBalloonTip?.Invoke(this, tip);
             }
         }
-
-        public void UpdateGFWList(bool direct)
+        public string GetGFWListFilePath()
         {
-            WebClient http = new WebClient();
-            if (!direct)
-            {
-                http.Proxy = new WebProxy(IPAddress.Loopback.ToString(), remotePort);
-            }
-            http.DownloadStringCompleted += http_DownloadStringCompleted;
-            http.DownloadStringAsync(new Uri(gfwlist_url));
-            BalloonTip tip = new BalloonTip()
-            {
-                IconIndex = 1,
-                Message = "Downloading GFWList file,please wait a moment",
-                timeout = 3000
-            };
-            ShowBalloonTip?.Invoke(this, tip);
+            string path = Path.Combine(directory, gfwlist_file);
+            if (!File.Exists(path))
+                File.WriteAllText(path, Resources.gfwlist);
+            return path;
         }
-
-        private void http_DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e)
-        {
-            try
-            {
-                string path = Path.Combine(directory, gfwlist_file);
-                string gfwlist = File.ReadAllText(path, Encoding.UTF8);
-                BalloonTip tip;
-                if (gfwlist == e.Result)
-                {
-                    tip = new BalloonTip()
-                    {
-                        IconIndex = 2,
-                        Message = "GFWList is latest,no need to update",
-                        timeout = 3000
-                    };
-                    ShowBalloonTip?.Invoke(this, tip);
-                    return;
-                }
-                File.WriteAllText(path, e.Result, Encoding.UTF8);
-                tip = new BalloonTip()
-                {
-                    IconIndex = 1,
-                    Message = "Download GFWList file success",
-                    timeout = 3000
-                };
-                ShowBalloonTip?.Invoke(this, tip);
-                UpdatePACFile();
-            }
-            catch (Exception)
-            {
-                BalloonTip tip = new BalloonTip()
-                {
-                    IconIndex = 3,
-                    Message = "Download GFWList file fail, please check network or try change proxy mode",
-                    timeout = 3000
-                };
-                ShowBalloonTip?.Invoke(this,tip);
-            }
-        }
-
 
         public string GetUserRuleFilePath()
         {
@@ -252,23 +204,19 @@ namespace sysproxy.Services
             return path;
         }
 
-        private void WatchUserRulerFile()
+        private void WatchFile(string filename)
         {
-            if(UserRuleFileWatcher != null)
-            {
-                UserRuleFileWatcher.Dispose();
-            }
-            UserRuleFileWatcher = new FileSystemWatcher(directory);
-            UserRuleFileWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
-            UserRuleFileWatcher.Filter = user_rule_file;
-            UserRuleFileWatcher.Changed += UserRuleFile_Changed; ;
-            UserRuleFileWatcher.EnableRaisingEvents = true;
+            FileSystemWatcher watcher = new FileSystemWatcher(directory);
+            watcher.Filter = filename;
+            watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
+            watcher.Changed += File_Changed; ;
+            watcher.EnableRaisingEvents = true;
         }
 
         // FileSystemWatcher Changed event is raised twice
         // http://stackoverflow.com/questions/1764809/filesystemwatcher-changed-event-is-raised-twice
         private static Hashtable fileChangedTime = new Hashtable();
-        private void UserRuleFile_Changed(object sender, FileSystemEventArgs e)
+        private void File_Changed(object sender, FileSystemEventArgs e)
         {
             string path = e.FullPath.ToString();
             string currentLastWriteTime = File.GetLastWriteTime(e.FullPath).ToString(CultureInfo.InvariantCulture);
@@ -276,9 +224,13 @@ namespace sysproxy.Services
             // if there is no path info stored yet or stored path has different time of write then the one now is inspected
             if (!fileChangedTime.ContainsKey(path) || fileChangedTime[path].ToString() != currentLastWriteTime)
             {
-                UpdatePACFile();
-                UserRuleChanged?.Invoke(this, EventArgs.Empty);
-                fileChangedTime[path] = currentLastWriteTime;
+                Thread thread = new Thread(new ThreadStart(() =>
+                {
+                    UpdatePACFile();
+                    FileChanged?.Invoke(this, EventArgs.Empty);
+                    fileChangedTime[path] = currentLastWriteTime;
+                }));
+                thread.Start();
             }
         }
 
