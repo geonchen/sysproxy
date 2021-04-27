@@ -37,4 +37,4 @@ Microsoft [Visual Studio](https://www.visualstudio.com/downloads/ )
 
 ### License
 
-[GPLv3](https://github.com/shadowsocks/shadowsocks-windows/blob/master/LICENSE.txt )
+[GPLv3](https://github.com/keyonchen/sysproxy/blob/master/LICENSE )
